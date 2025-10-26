@@ -1,49 +1,75 @@
-import { http, createConfig } from 'wagmi'
-import { sepolia } from 'wagmi/chains'
 import { getDefaultConfig } from '@rainbow-me/rainbowkit'
-import { getConfig, NETWORK_CONFIGS } from './config'
+import { getConfig, type NetworkConfig } from './config'
 
-// Get current network configuration
-const config = getConfig()
+// Get current network configuration with fallback
+let config: NetworkConfig
+try {
+  config = getConfig()
+} catch (error) {
+  console.warn('Failed to load config, using fallback:', error)
+  // Fallback configuration for Celo Sepolia
+  config = {
+    network: 'celo-sepolia' as const,
+    chainId: 11142220,
+    chainName: 'Celo Sepolia',
+    rpcUrl: 'https://forno.celo-sepolia.celo-testnet.org',
+    contracts: {
+      vaultFactory: '0x6ABf558Ffa44399f9FAB764914AFef7375e323cA' as `0x${string}`,
+      auraOracle: '0x9A7bDcD1298cAA42D11361fd69f5aD4EfaB8dDeA' as `0x${string}`,
+      treasury: '0x56D68aCbc130FFF1499CE7C5a4E29Bf38703950b' as `0x${string}`,
+    },
+  }
+}
 
-// Define Anvil chain configuration
-const anvilChain = {
-  id: 31337,
-  name: 'Anvil Local',
+// Define Celo Sepolia testnet chain
+const celoSepoliaChain = {
+  id: 11142220,
+  name: 'Celo Sepolia',
   nativeCurrency: {
     decimals: 18,
-    name: 'Ether',
-    symbol: 'ETH',
+    name: 'CELO',
+    symbol: 'CELO',
   },
   rpcUrls: {
     default: {
-      http: ['http://localhost:8545'],
+      http: ['https://forno.celo-sepolia.celo-testnet.org'],
     },
     public: {
-      http: ['http://localhost:8545'],
+      http: ['https://forno.celo-sepolia.celo-testnet.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'Celo Sepolia Blockscout',
+      url: 'https://celo-sepolia.blockscout.com',
     },
   },
 } as const
 
-// Select chain based on environment
-const chains = config.network === 'anvil' ? [anvilChain] : [sepolia]
+const selectedChain = celoSepoliaChain
 
 // Create wagmi configuration with RainbowKit
 export const wagmiConfig = getDefaultConfig({
   appName: 'AuraFi',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'default-project-id',
-  chains: chains as any,
-  transports: {
-    [config.chainId]: http(config.rpcUrl),
-  },
+  chains: [selectedChain],
 })
 
 // Export current chain for use in components
-export const currentChain = chains[0]
+export const currentChain = selectedChain
 
 // Helper to check if user is on correct network
 export function isCorrectNetwork(chainId?: number): boolean {
-  return chainId === config.chainId
+  return chainId === selectedChain.id
 }
 
-// Hel
+// Helper to get network info
+export function getNetworkInfo() {
+  return {
+    chainId: selectedChain.id,
+    name: selectedChain.name,
+    currency: selectedChain.nativeCurrency.symbol,
+    rpcUrl: config.rpcUrl,
+    isFork: false,
+  }
+}

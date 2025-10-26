@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Environment validation schema
 const envSchema = z.object({
-  NEXT_PUBLIC_NETWORK: z.enum(['anvil', 'sepolia']),
+  NEXT_PUBLIC_NETWORK: z.enum(['celo-sepolia']),
   NEXT_PUBLIC_RPC_URL: z.string().url(),
   NEXT_PUBLIC_VAULT_FACTORY_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   NEXT_PUBLIC_AURA_ORACLE_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -13,7 +13,7 @@ const envSchema = z.object({
 
 // Network configuration type
 export type NetworkConfig = {
-  network: 'anvil' | 'sepolia'
+  network: 'celo-sepolia'
   chainId: number
   chainName: string
   rpcUrl: string
@@ -80,33 +80,20 @@ export function getContractAddress(contractName: keyof NetworkConfig['contracts'
 
 // Network-specific configurations
 export const NETWORK_CONFIGS = {
-  anvil: {
-    chainId: 31337,
-    name: 'Anvil Local',
+  'celo-sepolia': {
+    chainId: 11142220,
+    name: 'Celo Sepolia',
     rpcUrls: {
-      default: { http: ['http://localhost:8545'] },
-      public: { http: ['http://localhost:8545'] },
+      default: { http: ['https://forno.celo-sepolia.celo-testnet.org'] },
+      public: { http: ['https://forno.celo-sepolia.celo-testnet.org'] },
     },
     nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
-      decimals: 18,
-    },
-  },
-  sepolia: {
-    chainId: 11155111,
-    name: 'Sepolia',
-    rpcUrls: {
-      default: { http: ['https://sepolia.infura.io/v3'] },
-      public: { http: ['https://sepolia.infura.io/v3'] },
-    },
-    nativeCurrency: {
-      name: 'Sepolia Ether',
-      symbol: 'SEP',
+      name: 'CELO',
+      symbol: 'CELO',
       decimals: 18,
     },
     blockExplorers: {
-      default: { name: 'Etherscan', url: 'https://sepolia.etherscan.io' },
+      default: { name: 'Celo Sepolia Blockscout', url: 'https://celo-sepolia.blockscout.com' },
     },
   },
 } as const

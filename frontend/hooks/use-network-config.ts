@@ -8,35 +8,19 @@ import { formatAddress, isValidAddress, formatTxHash, isValidTxHash } from '../l
 
 // Network configuration based on environment
 const NETWORK_CONFIG = {
-  anvil: {
-    id: 31337,
-    name: 'Anvil Local',
-    rpcUrl: 'http://localhost:8545',
+  'celo-sepolia': {
+    id: 11142220,
+    name: 'Celo Sepolia',
+    rpcUrl: process.env.NEXT_PUBLIC_RPC_URL || 'https://forno.celo-sepolia.celo-testnet.org',
     nativeCurrency: {
-      name: 'Ether',
-      symbol: 'ETH',
+      name: 'CELO',
+      symbol: 'CELO',
       decimals: 18,
     },
     blockExplorers: {
       default: {
-        name: 'Local Explorer',
-        url: 'http://localhost:8545',
-      },
-    },
-  },
-  sepolia: {
-    id: 11155111,
-    name: 'Sepolia Testnet',
-    rpcUrl: process.env.NEXT_PUBLIC_RPC_URL || 'https://rpc.sepolia.org',
-    nativeCurrency: {
-      name: 'Sepolia Ether',
-      symbol: 'SEP',
-      decimals: 18,
-    },
-    blockExplorers: {
-      default: {
-        name: 'Etherscan',
-        url: 'https://sepolia.etherscan.io',
+        name: 'Celo Sepolia Blockscout',
+        url: 'https://celo-sepolia.blockscout.com',
       },
     },
   },
@@ -52,13 +36,12 @@ export function useNetworkConfig() {
   const { isConnected } = useAccount()
 
   // Get target network from environment
-  const targetNetworkType = (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'anvil'
+  const targetNetworkType = (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'celo-sepolia'
   const targetChain = NETWORK_CONFIG[targetNetworkType]
 
   // Determine current network type based on chain ID
   const currentNetworkType = useMemo((): NetworkType | null => {
-    if (chainId === NETWORK_CONFIG.anvil.id) return 'anvil'
-    if (chainId === NETWORK_CONFIG.sepolia.id) return 'sepolia'
+    if (chainId === NETWORK_CONFIG['celo-sepolia'].id) return 'celo-sepolia'
     return null
   }, [chainId])
 
@@ -94,7 +77,7 @@ export function useNetworkConfig() {
   // Get contract addresses for current environment
   const contractAddresses = useMemo(() => {
     const prefix = targetNetworkType.toUpperCase()
-    
+
     return {
       vaultFactory: process.env[`NEXT_PUBLIC_${prefix}_VAULT_FACTORY_ADDRESS`] || '',
       auraOracle: process.env[`NEXT_PUBLIC_${prefix}_AURA_ORACLE_ADDRESS`] || '',
@@ -105,7 +88,7 @@ export function useNetworkConfig() {
   // Validate contract addresses
   const hasValidAddresses = useMemo(() => {
     const { vaultFactory, auraOracle, treasury } = contractAddresses
-    
+
     return (
       vaultFactory && vaultFactory !== '0x0000000000000000000000000000000000000000' &&
       auraOracle && auraOracle !== '0x0000000000000000000000000000000000000000' &&
@@ -119,29 +102,29 @@ export function useNetworkConfig() {
     currentChain,
     targetNetworkType,
     currentNetworkType,
-    
+
     // Network status
     isWrongNetwork,
     isSupportedNetwork,
     isConnected,
-    
+
     // Network information
     networkInfo,
-    
+
     // Contract addresses
     contractAddresses,
     hasValidAddresses,
-    
+
     // Utility functions
     getBlockExplorerUrl: (hash: string, type: 'tx' | 'address' = 'tx') => {
       const baseUrl = currentChain?.blockExplorers.default.url || targetChain.blockExplorers.default.url
       return `${baseUrl}/${type}/${hash}`
     },
-    
+
     isTargetNetwork: (networkType: NetworkType) => {
       return targetNetworkType === networkType
     },
-    
+
     isCurrentNetwork: (networkType: NetworkType) => {
       return currentNetworkType === networkType
     },
@@ -160,17 +143,17 @@ export function useContractAddress(contractName: 'vaultFactory' | 'auraOracle' |
  * Utility function to get contract address (for use outside hooks)
  */
 export function getContractAddress(contractName: 'VAULT_FACTORY' | 'AURA_ORACLE' | 'TREASURY'): string {
-  const networkType = (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'anvil'
-  const prefix = networkType.toUpperCase()
-  
+  const networkType = (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'celo-sepolia'
+  const prefix = networkType.toUpperCase().replace('-', '_')
+
   const envVarName = `NEXT_PUBLIC_${prefix}_${contractName}_ADDRESS`
   const address = process.env[envVarName] || ''
-  
+
   if (!address || address === '0x0000000000000000000000000000000000000000') {
     console.warn(`Contract address not configured: ${envVarName}`)
     return ''
   }
-  
+
   return address
 }
 
@@ -180,6 +163,6 @@ export function getContractAddress(contractName: 'VAULT_FACTORY' | 'AURA_ORACLE'
  * Get network-specific configuration
  */
 export function getNetworkConfig(networkType?: NetworkType) {
-  const type = networkType || (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'anvil'
+  const type = networkType || (process.env.NEXT_PUBLIC_NETWORK as NetworkType) || 'celo-sepolia'
   return NETWORK_CONFIG[type]
 }
